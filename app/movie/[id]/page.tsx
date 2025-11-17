@@ -3,14 +3,36 @@ import Image from 'next/image'
 import Link from 'next/link'
 import MovieActionButtons from '@/components/MovieActionButtons'
 
+// Force this route to be rendered at request time to avoid build-time data collection issues
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function MoviePage({ params }: { params: { id: string } }) {
-  const data = await fetchMovieDetail(params.id)
+  let data: any = null
+  try {
+    data = await fetchMovieDetail(params.id)
+  } catch (err) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl font-bold mb-4 text-red-500">Movie Load Error</h1>
+          <p className="text-gray-300 mb-6">{err instanceof Error ? err.message : 'Unknown error fetching movie data.'}</p>
+          <Link href="/" className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-red-600 hover:bg-red-500 transition font-semibold">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back Home
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen pb-12">
       {/* Hero Section */}
       <div className="relative h-[60vh] sm:h-[70vh]">
-        {data.Poster && data.Poster !== 'N/A' ? (
+        {data?.Poster && data.Poster !== 'N/A' ? (
           <Image src={data.Poster} alt={data.Title} fill className="object-cover" priority />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-neutral-900 to-black" />
@@ -25,11 +47,11 @@ export default async function MoviePage({ params }: { params: { id: string } }) 
             </svg>
             Back to Home
           </Link>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 drop-shadow-2xl">{data.Title}</h1>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 drop-shadow-2xl">{data?.Title || 'Unknown Title'}</h1>
           <div className="flex flex-wrap gap-2 mb-4">
-            <span className="px-3 py-1 bg-red-600 rounded text-xs sm:text-sm font-semibold">{data.Rated || 'NR'}</span>
-            <span className="px-3 py-1 bg-gray-700/80 rounded text-xs sm:text-sm backdrop-blur">{data.Year}</span>
-            <span className="px-3 py-1 bg-gray-700/80 rounded text-xs sm:text-sm backdrop-blur">{data.Runtime || 'N/A'}</span>
+            <span className="px-3 py-1 bg-red-600 rounded text-xs sm:text-sm font-semibold">{data?.Rated || 'NR'}</span>
+            <span className="px-3 py-1 bg-gray-700/80 rounded text-xs sm:text-sm backdrop-blur">{data?.Year || '—'}</span>
+            <span className="px-3 py-1 bg-gray-700/80 rounded text-xs sm:text-sm backdrop-blur">{data?.Runtime || 'N/A'}</span>
           </div>
           <MovieActionButtons title={data.Title} />
         </div>
